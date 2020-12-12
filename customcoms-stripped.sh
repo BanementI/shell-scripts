@@ -24,7 +24,7 @@ function yeet() {
    yay -Rsnd $1
 }
 
-#Get status code of any website, and ONLY the status code.
+#Get status code of any website.
 function webstatus() {
    STATUS=$(http -hdo ./body $1 2>&1 | grep HTTP/ ); echo $STATUS
 }
