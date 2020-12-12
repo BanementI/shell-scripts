@@ -4,7 +4,7 @@ function files() {
    find . -type f | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq -c | sort -rn
 }
 
-# Get HTTP status. Could type it manually but mate I'm lazy and this is another option.
+# Shittier version of webstatus that remains for some reason.
 function httpstatus() {
    http httpbin.org/status/$1
 }
