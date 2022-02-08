@@ -12,7 +12,7 @@ LCYAN='033[1;36m'
 PURP='\033[0;35m'
 PINK='\033[1;35m'
 GRAY='\033[1;30m'
-LGRAY='033[0;37m'
+LGRAY='\033[0;37m'
 NC='\033[0m'
 
 function nmapscripts() {
