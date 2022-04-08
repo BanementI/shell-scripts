@@ -41,6 +41,8 @@ function commands() {
 		printf "${LBLU}dorking${NC}\n"
       printf "bspwm"
       printf "brightnesctl set 10000"
+      printf "usbdeath\n"
+      printf "custom\n"
     fi
 
    if [ "$1" = "osint" ]
@@ -119,6 +121,60 @@ function commands() {
       printf "Super S - Floating\n"
       printf "Super F - Fullscreen\n"
       printf "Moving floating windows: Super Arrows\n"
-
    fi
+   
+   if [ "$1" = "usbdeath" ]
+   then
+      printf "usbdeath show - Check connected USB devices\n"
+      printf "usbdeath on - Generate whitelist of connected devices\n"
+      printf "usbdeath eject - Add event on ejection of specific device\n"
+      printf "usbdeath off - Turn off usbdeath (to insert a new trusted device)\n"
+      printf "usbdeath gen - Permanently add new trusted device\n"
+      printf "usbdeath edit - Edit udev rules manually\n"
+      printf "usbdeath del - Delete the udev rules files and start over\n"
+   fi
+
+  if [ "$1" = "custom" ]
+  then
+     printf "files - List unique files in a directory.\n"
+     printf "ipinfo - Simple IP lookup + token.\n"
+     printf "ipdata - Advanced IP lookup + token.\n"
+     printf "yeet - Fully removes a package (Arch).\n"
+     printf "nmaplocal - Local nmap scan with some options.\n"
+     printf "webstatus - Get the status code of any website (httpie).\n"
+     printf "untar/maketar - Untar, make a tar.\n"
+     printf "best - Best yt-dlp format. Out of date.\n"
+     printf "weblookup - Get the IP info from a domain.\n"
+     printf "nmapscripts - List the nmap script categories.\n"
+     printf "0x0 - Uploads a file to 0x0. Bash only.\n"
+     printf "spoofmac - Spoofs MAC address. Depends on wlo1 and needs macchanger.\n"
+     printf "rudeScan - the loudar u are the less u here. (Extremely aggressive nmap scan)\n"
+   fi
+}
+
+#nmap script categories.
+function nmapscripts() {
+	printf "${LGRAY}default - Scripts that are ran when using -sC or -A.\n"
+	printf "${LGREEN}safe - Scripts that aren't designed to crash services, use large amounts of bandwidth or exploits. A bit more sysadmin friendly. Almost.\n"
+	printf "${LRED}auth - Authentication credentials (and bypassing them). No bruteforce.\n"
+	printf "${ORANGE}broadcast - Scripts that broadcast on the local network.\n"
+	printf "${RED}brute - Automate bruteforce attacks to guess the auth creds of a target.\n"
+	printf "${ORANGE}discovery - Tries to actively discover more about the network by querying third parties.\n"
+	printf "${RED}dos - Scripts that may cause a denial of service. May also crash the target system.\n"
+	printf "${RED}exploit - Actively exploit some vulnerability\n."
+	printf "${ORANGE}external - May send data to third-party databases.\n"
+	printf "${RED}fuzzer - Scripts which are designed to send unexpected or randomized fields in each packet. It's slow, bandwidth intensive and may cause a DoS or crash the target.\n"
+	printf "${RED}intrusive - High chance of harming the target system.\n"
+	printf "${LRED}malware - Checks whether the target is infected with malware or backdoors.\n"
+	printf "${RED}vuln - Check for specific known vulnerabilities.\n"
+}
+
+#Restart + status.
+function restat() {
+   systemctl restart $1
+   systemctl status $1
+}
+
+function xxr() {
+   find . -type f -exec xxhsum {} + | tee xxhsum
 }
