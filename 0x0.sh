@@ -23,7 +23,7 @@ do
 	 "Pixeldrain - 18.63GiB")
            url=(https://pixeldrain.com/api/file/)
            id_=$(curl -T "$file" $url | jq -r '.id')
-           printf "https://pixeldrain.com/u/$id_ " | tee >(clip.exe) && exit
+           printf "https://pixeldrain.com/u/$id_ " | xclip && exit
            ;;
         "Quit")
             break
@@ -32,5 +32,5 @@ do
     esac
 done
 
-curl -F"file=@$file" $url | tee >(clip.exe)
+curl -F"file=@$file" $url | xclip
 }
