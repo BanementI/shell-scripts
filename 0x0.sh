@@ -20,6 +20,11 @@ do
             url=(https://ttm.sh)
 	    break
             ;;
+	 "Pixeldrain - 18.63GiB")
+           url=(https://pixeldrain.com/api/file/)
+           id_=$(curl -T "$file" $url | jq -r '.id')
+           printf "https://pixeldrain.com/u/$id_ " | tee >(clip.exe) && exit
+           ;;
         "Quit")
             break
             ;;
@@ -27,7 +32,5 @@ do
     esac
 done
 
-curl -F"file=@$file" $url
-#echo $file $url
-
+curl -F"file=@$file" $url | tee >(clip.exe)
 }
