@@ -1,8 +1,9 @@
 function hmap() {
    if [ -z "$1" ]
    then
+     printf "hmap : nmap helper"
      printf "a : all\n"
-     printf "aa : all, aggressive"\n
+     printf "aa : all, aggressive\n"
      printf "s : stealth\n"
    fi
 
