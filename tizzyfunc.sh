@@ -114,13 +114,28 @@ watchstatus() {
 }
 
 # Get the HTTP code of a URL. Needs HTTPie.
-function webstatus() {
+webstatus() {
    STATUS=$(http -hdo ./body $1 2>&1 | grep HTTP/ ); echo $STATUS
 }
 
 # Get cheat.sh manpage TLDRs.
-function cheat() {
+cheat() {
   curl cheat.sh/$1
+}
+
+# Selects random VPN config
+vpn-on() {
+   CONFIG=$(sudo sh -c 'shuf -n1 -e /etc/wireguard/*.conf')
+   wg-quick up $CONFIG
+   echo $CONFIG > $HOME/.currentvpn
+}
+
+vpn-off() {
+    #Accesses the file made by vpn-on.sh to get the current config.
+    CONFIG=$(cat $HOME/.currentvpn)
+
+    #Haha VPN go down
+    wg-quick down $CONFIG
 }
 
 # Mounts my NAS on WSL.
