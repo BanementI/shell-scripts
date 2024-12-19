@@ -7,6 +7,15 @@
 #
 ##################################################################
 
+# Command thingy.
+commands() {
+        echo "useful commands:"
+        echo "gdl (thing) -  Bulk download a designated list." # Command not included with this script.
+        echo "quick-warc (url) - WARC a website."
+        echo "quick-dl (url) - Downloads a given profile to /sym/Other."
+        echo "dvconv (file) - Converts a minidv file to MP4."
+}
+
 # Converts a digitized MiniDV video to MP4. 
 dvconv() {
     if [ -z "$1" ]; then
