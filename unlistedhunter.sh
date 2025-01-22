@@ -16,11 +16,8 @@ unlistedhunter() {
         echo "unlistedhunter stats"
         echo "C A P T . U"
         echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
-        return 0
     }
 
-    # Show the stats if you Ctrl + C
-    trap stats SIGINT
 
    if [[ "$1" == "old" ]]; then
         # Extract video IDs from filenames in the old format
