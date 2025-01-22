@@ -12,6 +12,16 @@ unlistedhunter() {
     tCount=0
     pubCount=0
 
+    stats() {
+        echo "unlistedhunter stats"
+        echo "C A P T . U F"
+        echo "$cCount $aCount $pCount $tCount $pubCount $unCount $fCount"
+        exit 0
+    }
+
+    # Show the stats if you Ctrl + C
+    trap stats SIGINT
+
    if [[ "$1" == "old" ]]; then
         # Extract video IDs from filenames in the old format
         find . -maxdepth 1 -regex '.*\.\(mkv\|mp4\|webm\)' | sed -E 's/.*-([A-Za-z0-9_-]{11})\.[^.]+$/\1/' > "$videoList"
@@ -63,8 +73,5 @@ unlistedhunter() {
             fi
         fi
     done < "$videoList"
-
-    echo "unlistedhunter stats"
-    echo "C A P T . U"
-    echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
+    stats
 }
