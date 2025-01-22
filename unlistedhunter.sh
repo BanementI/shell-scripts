@@ -14,9 +14,9 @@ unlistedhunter() {
 
     stats() {
         echo "unlistedhunter stats"
-        echo "C A P T . U F"
+        echo "C A P T . U"
         echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
-        exit 0
+        return 0
     }
 
     # Show the stats if you Ctrl + C
