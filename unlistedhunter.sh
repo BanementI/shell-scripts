@@ -6,6 +6,11 @@
 unlistedhunter() {
     # Video list file
     videoList="localIDs.txt"
+    cCount=0
+    aCount=0
+    pCount=0
+    tCount=0
+    pubCount=0
 
    if [[ "$1" == "old" ]]; then
         # Extract video IDs from filenames in the old format
@@ -34,22 +39,32 @@ unlistedhunter() {
         output=$(yt-dlp --simulate --print-json $videoUrl 2>&1) # Add your own cookies to see status of adult videos.
 
         # Check for specific strings in the output
-                # Check for specific strings in the output
-        if echo "$output" | grep -q "terminated"; then # Terminated YT account
-            echo -n "T"
-        elif echo "$output" | grep -q "Private"; then # Private video
-            echo -n "P"
+        if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
+            echo -n "C"
+            ((cCount++))
         elif echo "$output" | grep -q "inappropriate"; then # 18+
             echo -n "A"
-        elif echo "$output" | grep -q "copyright claim"; then # Copyright claimed
-            echo -n "C"
+            ((aCount++))
+        elif echo "$output" | grep -q "Private"; then # Private video
+            echo -n "P"
+            ((pCount++))
+        elif echo "$output" | grep -q "terminated"; then # Terminated YT account
+            echo -n "T"
+            ((tCount++))
         else 
             if echo "$output" | grep -q "unlisted"; then # What we want
                 printf "\nUNLISTED: $videoUrl\n"
                 echo $output | jq '.title'
+                ((unCount++))
+                
             else # Public videos
                 echo -n "."
+                ((pubCount++))
             fi
         fi
     done < "$videoList"
+
+    echo "unlistedhunter stats"
+    echo "C A P T . U"
+    echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
 }
