@@ -15,7 +15,7 @@ unlistedhunter() {
     stats() {
         echo "unlistedhunter stats"
         echo "C A P T . U F"
-        echo "$cCount $aCount $pCount $tCount $pubCount $unCount $fCount"
+        echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
         exit 0
     }
 
@@ -61,13 +61,11 @@ unlistedhunter() {
         elif echo "$output" | grep -q "terminated"; then # Terminated YT account
             echo -n "T"
             ((tCount++))
-        else 
-            if echo "$output" | grep -q "unlisted"; then # What we want
-                printf "\nUNLISTED: $videoUrl\n"
-                echo $output | jq '.title'
-                ((unCount++))
-                
-            else # Public videos
+        elif echo "$output" | grep -q "unlisted"; then # What we want
+            printf "\nUNLISTED: $videoUrl\n"
+            echo $output | jq '.title'
+            ((unCount++))       
+        else # Public videos
                 echo -n "."
                 ((pubCount++))
             fi
