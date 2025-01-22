@@ -68,7 +68,6 @@ unlistedhunter() {
         else # Public videos
                 echo -n "."
                 ((pubCount++))
-            fi
         fi
     done < "$videoList"
     stats
