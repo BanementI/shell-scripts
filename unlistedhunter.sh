@@ -16,8 +16,8 @@ unlistedhunter() {
 
     stats() {
         echo "unlistedhunter stats"
-        echo "C A P T . U"
-        echo "$cCount $aCount $pCount $tCount $pubCount $unCount"
+        echo "C A P T . U D"
+        echo "$cCount $aCount $pCount $tCount $pubCount $unCount $dCount"
     }
 
 
@@ -31,7 +31,7 @@ unlistedhunter() {
 
     # Base URL for YouTube videos
     baseUrl="https://www.youtube.com/watch?v="
-    echo "unlistedhunter: C = Copyright, A = 18+, P = Private, T = Terminated, . = Public" 
+    echo "unlistedhunter: C = Copyright, A = 18+, P = Private, T = Terminated, . = Public, D = Deleted" 
 
     # Loop through each line in the video list
     while read -r videoId; do
