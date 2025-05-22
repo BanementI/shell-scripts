@@ -185,7 +185,7 @@ unlistedhunter() {
         elif echo "$output" | grep -q "inappropriate"; then # 18+
             printf "A"
             aCount=$((aCount + 1))
-        elif echo "$output" | grep -q "Private"; then # Private video
+        elif echo "$output" | grep -q "private"; then # Private video
             printf "P"
             pCount=$((pCount + 1))
         elif echo "$output" | grep -q "terminated"; then # Terminated YT account
