@@ -176,7 +176,7 @@ unlistedhunter() {
         videoUrl="${baseUrl}${videoId}"
 
         # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        output=$(yt-dlp --simulate --print-json --cookies ~/ai/cookies.txt "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
+        output=$(yt-dlp --simulate --print-json --cookies <loc> "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
 
         # Check for specific strings in the output
         if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
