@@ -147,7 +147,7 @@ unlistedhunter() {
     dCount=0
 
     stats() {
-        echo "unlistedhunter stats"
+        printf "%s\nunlistedhunter stats"
         echo "C A P T . U D"
         echo "$cCount $aCount $pCount $tCount $pubCount $unCount $dCount"
     }
@@ -176,7 +176,7 @@ unlistedhunter() {
         videoUrl="${baseUrl}${videoId}"
 
         # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        output=$(yt-dlp --simulate --print-json "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
+        output=$(yt-dlp --simulate --print-json --cookies ~/ai/cookies.txt "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
 
         # Check for specific strings in the output
         if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
@@ -196,8 +196,8 @@ unlistedhunter() {
             dCount=$((dCount + 1))
         else 
             if echo "$output" | grep -q "unlisted"; then # What we want
-                printf "UNLISTED: %s" "$videoUrl\n"
-                echo "$output" | jq '.title'
+				printf "\nUNLISTED: %s\n" "$videoUrl"
+				echo "$output" | jq '.title'
                 unCount=$((unCount + 1))
             else # Public videos
                 printf "."
@@ -333,6 +333,34 @@ zipback() {
     done
 
 rm ./zipback/temp_urlList.txt
+}
+
+cdxback() {
+
+    if [ -z "$1" ]; then
+        echo "Gets the cdx file for a given page."
+        echo "Usage: cdxback <site>"
+    return 1
+    fi
+    
+    curl -s "https://web.archive.org/cdx/search/cdx?url=$1&matchType=prefix&output=json&collapse=urlkey&filter=statuscode:200" > "cdx_$1.json"
+    echo "Created cdx_$1.json"
+}
+
+cdxmake() {
+
+     if [ -z "$1" ]; then
+        echo "Generates a list of URLs from a CDX. Use after cdxback."
+        echo "Usage: cdxmake <site>"
+    return 1
+    fi
+
+    BASE_URL="$1"
+    # da loop
+    jq -r '.[] | select(.[2]) | .[1] + " " + "https://web.archive.org/web/" + .[1] + "/" + .[2]' cdx_"$BASE_URL".json | tail -n +2 | while read -r timestamp url; do
+    filename=$(basename "$url")
+    echo "$url" >> $BASE_URL\_list.txt
+    done
 }
 
 wixmp-search() {
