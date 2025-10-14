@@ -1,20 +1,41 @@
 #!/bin/sh
 ##################################################################
-# ARCFUNC
+# ARCFUNC - PUBLIC - NOT POSIX COMPLIANT
 #
-# Scripts to help maintain my archives.
+# Scripts to help maintain my archives. Some were mostly AI-assisted, they have been noted.
 #
+# REQUIREMENTS: yt-dlp, gallery-dl, ripgrep
+# 
 ##################################################################
+
+ERROR='\033[0;31mERROR:\033[0m'
+WARN='\033[1;33mWARN:\033[0m'
+NOTE='\033[0;36mNOTE:\033[0m'
 
 arcfunc() {
     printf "arcfunc by banement\n"
-    printf "pixivcheck - Checks if pixiv images are still online or not.\n"
-    printf "pixivnum - Displays the detected amount of pixiv images.\n"
-    printf "unlistedhunter - Basically a better version of videocheck, prioritises unlisted videos.\n"
-    printf "videocheck - Checks the status of downloaded youtube videos.\n"
-    printf "idgen - Generates a list of video IDs as output.txt.\n"
-    printf "zipback - Fetches all of a specified file format from an archive on IA.\n"
-    printf "wixmp-search <uuid> - Searches IA API for URLs.\n"
+    printf "arc | etc | help\n"
+
+    if [ "$1" = "arc" ]; then
+        printf "$WARN checkdel - Compares live Twitter metadata to the images we have downloaded, and sorts deleted images.\n"
+        printf "cdxback <website> - Makes a CDX from inputted site.\n"
+        printf "cdxmake <website> - Generates a list of URLs from a CDX. Use after cdxback.\n" 
+        printf "$WARN da-search <username> - Searches a LOCAL CDX DB and grabs its IA URLs.\n"
+        printf "dvconv <file> - Converts a minidv file to MP4.\n"
+        printf "idgen - Generates a list of video IDs as output.txt.\n"
+        printf "pixivcheck - Checks if pixiv images are still online or not.\n"
+        printf "pixivnum - Displays the detected amount of pixiv images.\n"
+        printf "quick-warc - WARC a website."
+        printf "twtarc-neo - The improved and fixed version of twtarc. Attempts to recover images from deleted twitter accounts via IA API.\n"
+        # printf "twthelp - Shows the other twtarc commands.\n" outdated
+        printf "unlistedhunter - Goes through the current folder of downloaded YouTube videos, and verifies their status online. May require cookies.\n"
+        printf "$NOTE wixmp-search <uuid> - Searches IA API for URLs.\n"
+        printf "zipback - Get all archives (and other files) from a specified wayback website.\n"
+    elif [ "$1" = "etc" ]; then
+        printf "apk-size - On Alpine, gives a list of all the packages and their sizes.\n"
+    elif [ "$1" = "help" ]; then
+        printf "yellow = NAS-specific setup | blue = read the README\n"
+    fi
 }
 
 # Scans the current folder for pixiv images and checks if they are still online.
@@ -53,88 +74,15 @@ pixivcheck() {
 }
 
 pixivnum() {
-    find . -maxdepth 1 -type f -print | sed -nE 's/^([0-9]+)_p.*/\1/p'
+    find . -maxdepth 1 -type f -print | sed -n 's#./\([0-9]\+\)_p.*#\1#p'
 }
 
-# Scans the current folder for youtube video IDs downloaded by yt-dlp/youtube-dl, then checks if they are still online.
-# Usage: videocheck [old] 
-videocheck() {
-    # Video list file
-    videoList="localIDs.txt"
-    cCount=0
-    aCount=0
-    pCount=0
-    tCount=0
-    dCount=0
-    pubCount=0
-
-    stats() {
-        echo "videocheck stats"
-        echo "C A P T . D"
-        echo "$cCount $aCount $pCount $tCount $pubCount $dCount"
-    }
-
-    if [ "$1" = "old" ]; then
-        # Extract video IDs from filenames in the old format
-        find . -maxdepth 1 -regex '.*\.\(mkv\|mp4\|webm\)' | sed -En '/.*-[A-Za-z0-9_-]{11}\.[^.]+$/ s/.*-([A-Za-z0-9_-]{11})\.[^.]+$/\1/p' | uniq > "$videoList"
-    else
-        # Extract video IDs from filenames with square brackets
-        find . -maxdepth 1 -regex '.*\.\(mkv\|mp4\|webm\)' | grep '\[[^]]\{11\}\]' | sed -E 's/.*\[([^]]{11})\].*/\1/' | uniq > "$videoList"
-    fi
-
-    # Base URL for YouTube videos
-    baseUrl="https://www.youtube.com/watch?v="
-
-    # Loop through each line in the video list
-    while read -r videoId; do
-        # Skip empty lines
-        if [ -z "$videoId" ]; then
-            echo "Skipping empty line."
-            continue
-        fi
-
-        # Construct the full video URL
-        videoUrl="${baseUrl}${videoId}"
-
-        # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        if [ -n "${DEBUG_SCRIPT}" ]; then # Set DEBUG_SCRIPT environmental variable to anything to get full output
-            output=$(yt-dlp --simulate "$videoUrl")
-        else
-            output=$(yt-dlp --simulate --cookies ~/ai/cookies.txt "$videoUrl" 2>&1)
-        fi
-
-        # Check for specific strings in the output
-        if echo "$output" | grep -q "inappropriate"; then
-            echo "OK (18+): $videoId"
-            (aCount++)
-        elif echo "$output" | grep -q "terminated"; then
-            echo "TERMINATED ACCOUNT: $videoUrl"
-            (tCount++)
-        elif echo "$output" | grep -q "Private video"; then
-            echo "PRIVATE: $videoUrl"
-            (pCount++)
-        elif echo "$output" | grep -q "copyright claim"; then
-            echo "COPYRIGHT CLAIMED: $videoUrl"
-            (cCount++)
-        elif echo "$output" | grep -q "Video unavailable"; then
-            echo "Video unavailable: $videoUrl"
-            (dCount++)
-        elif [ -n "${DEBUG_SCRIPT}" ]; then
-            echo "$output"
-        else
-            echo "OK: $videoId"
-            (pubCount++)
-        fi
-    done < "$videoList"
-    stats
-}
-
-# 
 idgen() {
   (find . -regex '.*\.\(mkv\|mp4\|webm\)' | sed -En '/.*-[A-Za-z0-9_-]{11}\.[^.]+$/ s/.*-([A-Za-z0-9_-]{11})\.[^.]+$/\1/p'; \
   find . -regex '.*\.\(mkv\|mp4\|webm\)' | grep '\[[^]]\{11\}\]' | sed -E 's/.*\[([^]]{11})\].*/\1/' | uniq) >> output.txt
 }
 
+# Checks your
 unlistedhunter() {
     # Video list file
     videoList="localIDs.txt"
@@ -176,7 +124,7 @@ unlistedhunter() {
         videoUrl="${baseUrl}${videoId}"
 
         # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        output=$(yt-dlp --simulate --print-json --cookies <loc> "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
+        output=$(yt-dlp --simulate --print-json --cookies ~/ai/cookies.txt "$videoUrl" 2>&1) # Add  <loc> to see adult video statuses
 
         # Check for specific strings in the output
         if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
@@ -210,7 +158,71 @@ unlistedhunter() {
 
 }
 
-# NOTE: initially ai generated but theres a shit ton of edits by me now
+twtcdx() {
+
+    if [ -z "$1" ]; then
+        echo "Gets the cdx file for a Twitter user."
+        echo "Usage: twtcdx <username>"
+    return 1
+    fi
+    
+    curl "https://web.archive.org/cdx/search/cdx?url=twitter.com/$1/status/&matchType=prefix&output=json&filter=statuscode:200" > "cdx_$1.json"
+    echo "Created cdx_$1.json"
+}
+
+twtquery() {
+
+    if [ -z "$1" ]; then
+        echo "Check if there's any archives of a twitter user."
+        echo "Usage: twtquery <username>"
+    return 1
+    fi
+
+    response=$(curl -s "https://web.archive.org/cdx/search/cdx?url=twitter.com/$1/status/&matchType=prefix&output=json&filter=statuscode:200")
+    if [ "$response" = "[]" ]; then
+        echo "Nothing found!"
+    else
+        echo "Valid!"
+    fi
+}
+
+twtmake() {
+
+    if [ -z "$1" ]; then
+        echo "Print all the image URLs"
+        echo "Usage: twtmake <username>"
+    return 1
+    fi
+    
+    json_file="cdx_$1.json"
+
+    jq -r '.[] | "\([.[1], .[2]])"' "$json_file" | while IFS=',' read -r timestamp original; do
+        # Clean up quotes from extracted values
+        timestamp=$(echo "$timestamp" | tr -d '"' | tr -d '[')
+        original=$(echo "$original" | tr -d '"' | tr -d ']')
+
+        # Now you can use timestamp and original variables for your command
+        #echo "Timestamp: $timestamp"
+        #echo "Original URL: $original"
+        formURL="https://web.archive.org/web/$timestamp/$original"
+
+        if [ "$2" = "img" ]; then
+            imageURL="$(curl -s "$formURL" | grep 'meta property="og:image" content="' | grep -o 'https://web.archive.org/web/'"$timestamp"'im_/https://pbs.twimg.com/media/[A-Za-z0-9-]\+\.[a-z]\+')"
+            echo "$imageURL"
+        else
+            echo "$formURL"
+        fi
+    done
+}
+
+twthelp() { # outdated
+    echo "twtarc - Uses archive.org to attempt to recover images from a deleted account."
+    echo "twtcdx - Gets the CDX file from API."
+    echo "twtquery - Check if a user was even archived."
+    echo "twtmake - Print all URLs of a certain type."
+}
+
+# NOTE: most of this was AI generated but ive made a lot of edits to it now.
 zipback() {
 
     if [ -z "$1" ]; then
@@ -240,7 +252,7 @@ zipback() {
         echo -e "$ERROR cdx file invalid! IA is having issues. Try later."
         grep "<html" cdx_$BASE_URL.json
         rm cdx_$BASE_URL.json # delete it, its no good
-        exit 1
+        return 1
     fi
 
     # === BUILD jq FILTER ===
@@ -281,7 +293,7 @@ zipback() {
         # still blocked? just cancel it.
         if echo "$status" | grep -q "Connection refused"; then
             echo -e "$ERROR Still blocked. Exiting."
-            exit 1
+            return 1
         fi
 
     # Check if it's a 404 (broken link)
@@ -297,9 +309,9 @@ zipback() {
         wget --timeout=10 --tries=2 --waitretry=0 --random-wait --retry-connrefused -q --show-progress --directory-prefix="./zipback" "$url"
         requests=$(expr $requests + 1)
 
-        # adding timestmaps
-        touchTime=$(date -d "${timestamp:0:8} ${timestamp:8:2}:${timestamp:10:2}:${timestamp:12:2}" +"%Y%m%d%H%M.%S")
-        touch -t "$touchTime" "$filename"
+        # adding timestmaps (if you're a nerd and using WSL)
+        # touchTime=$(date -d "${timestamp:0:8} ${timestamp:8:2}:${timestamp:10:2}:${timestamp:12:2}" +"%Y%m%d%H%M.%S")
+        # touch -t "$touchTime" "$filename"
 
         # dont get too caught up on certain files
         if [ $? -ne 0 ]; then
@@ -327,7 +339,7 @@ zipback() {
     # failsafe
     else
         echo -e "[$time] $ERROR Uhhh, unexpected code? $status"
-        exit 1
+        return 1
     fi
 
     done
@@ -363,16 +375,57 @@ cdxmake() {
     done
 }
 
+timeout-test() {
+    echo -e "Repeatedly sending reqs every 5 seconds until it lets us in"
+    
+    while true; do
+    # if we hit IA too hard they block us temporarily
+        time=$(date +%H:%M:%S)
+        echo -e "[$time] $NOTE Checking..."
+        status=$(wget --spider --timeout=10 --server-response "https://web.archive.org" 2>&1)
+        if echo "$status" | grep -q "Connection refused"; then
+            echo -e "[$time] $ERROR Still blocked, trying again."
+            sleep 5
+        else
+            echo -e "[$time] Unblocked!"
+            return 1
+        fi
+    done
+}
+
+da-search() {
+    search=$1
+    #shift
+    # "$@"
+    rg "$search" /sym/Root/Backups/DeviantArtDB | while IFS= read -r line; do
+    # Extract the quoted strings manually using POSIX tools
+    filename=$(echo "$line" | cut -d: -f1)
+    timestamp=$(echo "$line" | tr '"' '\n' | awk 'NR==4 {print $1}')
+    original=$(echo "$line" | tr '"' '\n' | awk 'NR==6 {print $1}')
+
+    echo "Found @ $filename/$timestamp"
+    # Create the Web Archive URL
+    archive_url="https://web.archive.org/web/$timestamp/$original"
+
+    # Print the archive URL
+    echo $archive_url >> $search.txt
+
+    # Use curl to fetch the URL
+    #curl -O "$archive_url"
+    done
+    echo "Sent to $search.txt"
+}
+
 wixmp-search() {
     uuid="$1"
 
     if [ -z "$uuid" ]; then
         echo "Usage: $0 <artist_uuid>"
         echo "-h for help"
-        exit 1
+        return 1
     elif [ $uuid == "-h" ]; then
         echo "how2find UUID: Find image from a user, direct link, string after /f/."
-        exit 1
+        return 1
     fi
 
     # List of base URL paths
@@ -396,10 +449,245 @@ wixmp-search() {
         echo "Found $timestamp"
         archive_url="https://web.archive.org/web/$timestamp/$original"
 
-        # Print the archive URL (optional, for debugging)
+        # Print the archive URL
         echo $archive_url >> $uuid.txt
     else
         echo "Nothing for $path"
     fi
     done
+}
+
+tumbldryer() { # unfinished 
+
+inputList="${1}_list.txt"
+tempFile="temp.html"
+
+while IFS= read -r pageUrl; do
+
+    status=$(wget --spider --timeout=10 --server-response "$pageUrl" 2>&1)
+
+    if echo "$status" | grep -q "Connection refused"; then
+        echo -e "[$(date)] ERROR Can't connect to $pageUrl, we're probably blocked."
+        echo -e "Calling timeout-test [DEBUG]"
+        # timeout-test
+
+        echo -e "WARN Taking a long nap (2 minutes)."
+        sleep 160 # Sleep for 2 minutes
+
+        # Try again after sleeping
+        status=$(wget --spider --timeout=10 --server-response "$pageUrl" 2>&1)
+
+        if echo "$status" | grep -q "Connection refused"; then
+            echo -e "ERROR Still blocked after retry. Exiting."
+            return 1
+        fi
+
+    fi
+
+    if echo "$status" | grep -q "404"; then
+        echo -e "WARN $pageUrl Not found!! Skipping."
+
+    elif echo "$status" | grep -q "200"; then
+        echo -e "\nDownloading: $pageUrl"
+        curl -s "$pageUrl" -o "$tempFile"
+        grep -oE 'http://[0-9]{1,3}\.media\.tumblr\.com[^ "]*' "$tempFile" | sort -u >> "${1}_found.txt"
+
+    else
+        echo -e "[$time] $ERROR Uhhh, unexpected code? $status"
+        return 1
+    fi
+
+done < "$inputList"
+
+# Remove duplicates from the output list
+sort -u "$outputList" -o "$outputList"
+
+
+}
+
+# yes yes I KNOW I KNOW ITS AI GENERATED I JUST
+# WANTED A SOLUTION ITS SO HOT IN MY ROOM RN
+# ILL REWRITE THIS LATER IF YOU REALLY WANT
+checkdel() {
+    # Check arguments
+    if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+        echo "Usage: checkdel <artist> [live]"
+	echo "live only supports twitter right now"
+        return 1
+    elif [ -n "$1" ]; then
+	imagesDir=$1
+    	metadataDir="$imagesDir/metadata"
+    	deletedDir="$imagesDir/deleted"
+    fi
+
+    if [ "$2" = "live" ]; then
+        echo "live check"
+	metadataDir="$imagesDir/integrityTemp"
+	# echo $metadataDir
+
+   gallery-dl -d . --postprocessor twitter-integrity --no-download -o skip=false --download-archive /dev/null "https://x.com/$1" > /dev/null
+
+#	if [[ "$1" == *x.com* ]]; then
+#	   gallery-dl -d . --postprocessor twitter-integrity --no-download -o skip=false --download-archive /dev/null "https://x.com/$1" > /dev/null        
+#	elif [[ "$1" == *pixiv.net* ]]; then
+#	   gallery-dl -d . --postprocessor pixiv-integrity --no-download -o skip=false --download-archive /dev/null "$1" > /dev/null
+#	fi
+    fi
+
+    # Ensure metadata directory exists
+    if [ ! -d "$metadataDir" ]; then
+        echo "Metadata directory not found at: $metadataDir"
+        return 1
+    fi
+
+    # Create deleted directory if it doesn't exist
+    mkdir -p "$deletedDir"
+
+    # echo "using $metadataDir"
+    # Extract 19-digit Twitter post IDs from filenames
+    tmpImageIds=$(mktemp)
+    tmpMetaIds=$(mktemp)
+
+    find "$imagesDir" -type f | grep -v "$metadataDir/" | grep -v "$deletedDir/" | sed -n 's#.*/\([0-9]\{19\}\)_.*#\1#p' | sort -u > "$tmpImageIds"
+    find "$metadataDir" -type f | sed -n 's#.*/\([0-9]\{19\}\)_.*#\1#p' | sort -u > "$tmpMetaIds"
+
+    # Find IDs with images but no metadata
+    missingMetaIds=$(comm -23 "$tmpImageIds" "$tmpMetaIds")
+
+    # Move matching image files to "deleted" folder
+    echo "Moving image files with no corresponding metadata to: $deletedDir"
+
+    echo "$missingMetaIds" | while read postId; do
+        echo "$postId"
+        find "$imagesDir" -type f | grep "/${postId}_" | grep -v "$metadataDir/" | grep -v "$deletedDir/" | while read file; do
+            mv "$file" "$deletedDir/"
+        done
+    done
+
+    # Cleanup
+    rm -f "$tmpImageIds" "$tmpMetaIds"
+
+    if [ "$2" = "live" ]; then
+	rm -rf "$imagesDir/integrityTemp"
+    fi
+
+}
+
+twtarc-neo() {
+    if [ -z "$1" ]; then
+        echo "Recovered archived images from a specified Twitter profile."
+        echo "Usage: twtarc <username>"
+        return 1
+    fi
+
+    mkdir -p "$1"
+
+    # Grab the CDX.json
+    curl -s "https://web.archive.org/cdx/search/cdx?url=twitter.com/$1/status/&matchType=prefix&output=json" > "cdx_$1.json"
+
+    json_file="cdx_$1.json"
+
+    # Loop through each entry in the JSON array
+    jq -r '.[] | "\([.[1], .[2]])"' "$json_file" | while IFS=',' read -r timestamp original; do
+        timestamp=$(echo "$timestamp" | tr -d '"' | tr -d '[')
+        original=$(echo "$original" | tr -d '"' | tr -d ']')
+
+        formURL="https://web.archive.org/web/${timestamp}if_/${original}"
+
+        # Grab all tweet-image <img> tags
+        imageURLs=$(curl -s "$formURL" | grep -o 'https://web.archive.org/web/'"$timestamp"'im_/https://pbs.twimg.com/media/[A-Za-z0-9_-]\+\.[a-zA-Z0-9]\+')
+
+        case "$original" in
+            https://*|http://*)
+                if [ -z "$imageURLs" ]; then
+                    echo "[$timestamp] No images found."
+                else
+                    for imageURL in $imageURLs; do
+                        echo "[$timestamp] Downloading: $imageURL"
+                        wget -nc -P "$1" -q "$imageURL"
+                        sleep 2 # avoid archive.org timeouts
+                    done
+                fi
+                ;;
+            *)
+                echo "Invalid URL: $original"
+                ;;
+        esac
+    done
+
+    touch "$1/GATHERED-BY-TWTARC"
+}
+
+# https://gist.github.com/rsms/87570aa1a839ce4884e7d83a3c3dac84
+apk-size() {
+	apk info -e -s \* >/tmp/apksize
+	awk 'NR % 3 == 1' /tmp/apksize | cut -d ' ' -f 1 > /tmp/apkname
+	awk 'NR % 3 == 2' /tmp/apksize > /tmp/apksize2
+	
+	while read -r n unit; do
+	  B=$n
+	  case "$unit" in
+	    KiB) B=$(( n * 1024 )) ;;
+	    MiB) B=$(( n * 1024 * 1024 )) ;;
+	    GiB) B=$(( n * 1024 * 1024 * 1024 )) ;;
+	  esac
+	  printf "%12u %4s %-3s\n" $B $n $unit
+	done < /tmp/apksize2 > /tmp/apksize
+	
+	paste -d' ' /tmp/apksize /tmp/apkname | sort -n -u | cut -c14-
+	rm /tmp/apksize /tmp/apksize2 /tmp/apkname
+}
+
+dvconv() {
+    if [ -z "$1" ]; then
+        echo "Usage: dvconv input.avi"
+        return 1
+    fi
+    input_file="$1"
+    output_file="${input_file%.*}.mp4"
+    ffmpeg -i "$input_file" -vf "yadif" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k "$output_file"
+}
+
+# Improved by AI, improved and fixed further by interloper.
+# Downloads an entire website as a WARC. Not reccomended for huge websites. Reccomended for small blog sites.
+quick-warc() {
+        if [ -z "$1" ]; then
+                echo "usage: quick-warc <url>"
+                return 1
+        fi
+
+        user_agent="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27"
+        warc_base="$(printf '%s' "$1" | sed 's/\W/_/g')"
+        warc_file="${warc_base}.warc.gz"
+        dest_dir=/sym/Root/Software/WARCs
+        mkdir -p "$dest_dir"
+
+        if [ -f "${dest_dir}/${warc_base}" ]; then
+                echo "$warc_file already exists in $dest_dir"
+                return 1
+        else
+                wget --warc-file="$warc_base" \
+                        --warc-cdx \
+                        --mirror \
+                        --page-requisites \
+                        --no-check-certificate \
+                        --restrict-file-names=windows \
+                        -e robots=off \
+                        --waitretry 5 \
+                        --timeout 60 \
+                        --tries 5 \
+                        --wait 1 \
+                        -U "$user_agent" \
+                        "$1"
+
+                # Move the generated WARC and CDX files to the designated folder
+                if [ -f "$warc_file" ]; then
+                        mv "$warc_file" "$dest_dir/"
+                        mv "${warc_base}.cdx" "$dest_dir/"
+                        test -d "$1" && rm -rf "$1"
+                else
+                        echo "Couldn't move ${warc_file}. Does it exist?"
+                fi
+                return 0
+        fi
 }
