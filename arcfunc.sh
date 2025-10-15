@@ -405,12 +405,41 @@ da-search() {
 
     echo "Found @ $filename/$timestamp"
     # Create the Web Archive URL
-    archive_url="https://web.archive.org/web/$timestamp/$original"
+    archive_url="https://web.archive.org/web/${timestamp}im_/$original"
 
     # Print the archive URL
     echo $archive_url >> $search.txt
 
     # Use curl to fetch the URL
+    #curl -O "$archive_url"
+    done
+    echo "Sent to $search.txt"
+}
+
+da-search-man() {
+
+    if [ $1 == "list" ]; then
+      ls /sym/Root/Backups/DeviantArtDB/CDX
+      return 1
+    fi
+
+    search=$2
+    #shift
+    # "$@"
+    rg "$search" /sym/Root/Backups/DeviantArtDB/CDX/$1 | while IFS= read -r line; do
+    # Extract the quoted strings manually using POSIX tools
+    filename=$(echo "$line" | cut -d: -f1)
+    timestamp=$(echo "$line" | tr '"' '\n' | awk 'NR==4 {print $1}')
+    original=$(echo "$line" | tr '"' '\n' | awk 'NR==6 {print $1}')
+
+    echo "Found @ $filename/$timestamp"
+    # Create the Web Archive URL
+    archive_url="https://web.archive.org/web/${timestamp}im_/$original"
+
+    # Print the archive URL (optional, for debugging)
+    echo $archive_url >> $search.txt
+
+    # Use curl to fetch the URL (you can add options like -O to save the file)
     #curl -O "$archive_url"
     done
     echo "Sent to $search.txt"
