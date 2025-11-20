@@ -28,7 +28,8 @@ arcfunc() {
         printf "quick-warc - WARC a website."
         printf "twtarc-neo - The improved and fixed version of twtarc. Attempts to recover images from deleted twitter accounts via IA API.\n"
         # printf "twthelp - Shows the other twtarc commands.\n" outdated
-        printf "unlistedhunter - Goes through the current folder of downloaded YouTube videos, and verifies their status online. May require cookies.\n"
+        printf "unlistedhunter - Goes through the current folder of downloaded YouTube videos, and verifies their status online, with priority over unlisted videos. May require cookies.\n"
+		printf "videocheck - Like unlistedhunter, but gives better details as to what videos are private, deleted, etc.\n"
         printf "$NOTE wixmp-search <uuid> - Searches IA API for URLs.\n"
         printf "zipback - Get all archives (and other files) from a specified wayback website.\n"
     elif [ "$1" = "etc" ]; then
@@ -719,4 +720,55 @@ quick-warc() {
                 fi
                 return 0
         fi
+}
+
+videocheck() {
+    # Video list file
+    videoList="localIDs.txt"
+    if [ "$1" = "old" ]; then
+        # Extract video IDs from filenames in the old format
+        find . -maxdepth 1 -regex '.*\.\(mkv\|mp4\|webm\)' | sed -En '/.*-[A-Za-z0-9_-]{11}\.[^.]+$/ s/.*-([A-Za-z0-9_-]{11})\.[^.]+$/\1/p' | uniq > "$videoList"
+    else
+        # Extract video IDs from filenames with square brackets
+        find . -maxdepth 1 -regex '.*\.\(mkv\|mp4\|webm\)' | grep '\[[^]]\{11\}\]' | sed -E 's/.*\[([^]]{11})\].*/\1/' | uniq > "$videoList"
+    fi
+
+    # Base URL for YouTube videos
+    baseUrl="https://www.youtube.com/watch?v="
+
+    # Loop through each line in the video list
+    while read -r videoId; do
+        # Skip empty lines
+        if [ -z "$videoId" ]; then
+            echo "Skipping empty line."
+            continue
+        fi
+
+        # Construct the full video URL
+        videoUrl="${baseUrl}${videoId}"
+
+        # Run yt-dlp to simulate fetching video info (without actually downloading it)
+        if [ -n "${DEBUG_SCRIPT}" ]; then # Set DEBUG_SCRIPT environmental variable to anything to get full output
+            output=$(yt-dlp --simulate "$videoUrl")
+        else
+            output=$(yt-dlp --simulate --cookies <cookies> "$videoUrl" 2>&1)
+        fi
+
+        # Check for specific strings in the output
+        if echo "$output" | grep -q "inappropriate"; then
+            echo "OK (18+): $videoId"
+        elif echo "$output" | grep -q "terminated"; then
+            echo "TERMINATED ACCOUNT: $videoUrl"
+        elif echo "$output" | grep -q "private"; then
+            echo "PRIVATE: $videoUrl"
+        elif echo "$output" | grep -q "copyright claim"; then
+            echo "COPYRIGHT CLAIMED: $videoUrl"
+        elif echo "$output" | grep -q "Video unavailable"; then
+            echo "Video unavailable: $videoUrl"
+        elif [ -n "${DEBUG_SCRIPT}" ]; then
+            echo "$output"
+        else
+            echo "OK: $videoId"
+        fi
+    done < "$videoList"
 }
