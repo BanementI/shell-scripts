@@ -25,7 +25,7 @@ arcfunc() {
         printf "idgen - Generates a list of video IDs as output.txt.\n"
         printf "pixivcheck - Checks if pixiv images are still online or not.\n"
         printf "pixivnum - Displays the detected amount of pixiv images.\n"
-        printf "quick-warc - WARC a website."
+        printf "quick-warc - WARC a website.\n"
         printf "twtarc-neo - The improved and fixed version of twtarc. Attempts to recover images from deleted twitter accounts via IA API.\n"
         # printf "twthelp - Shows the other twtarc commands.\n" outdated
         printf "unlistedhunter - Goes through the current folder of downloaded YouTube videos, and verifies their status online, with priority over unlisted videos. May require cookies.\n"
