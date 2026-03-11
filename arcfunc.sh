@@ -142,6 +142,7 @@ unlistedhunter() {
             tCount=$((tCount + 1))
         elif echo "$output" | grep -q "Video unavailable"; then
             printf "D"
+            printf "\nDELETED: %s\n" "$videoUrl"
             dCount=$((dCount + 1))
         else 
             if echo "$output" | grep -q "unlisted"; then # What we want
@@ -356,8 +357,8 @@ cdxback() {
     return 1
     fi
     
-    curl -s "https://web.archive.org/cdx/search/cdx?url=$1&matchType=prefix&output=json&collapse=urlkey&filter=statuscode:200" > "cdx_$1.json"
-    echo "Created cdx_$1.json"
+    curl -s "https://web.archive.org/cdx/search/cdx?url=$1&matchType=prefix&output=json&collapse=urlkey&filter=statuscode:200" > "$1.cdx"
+    echo "Created $1.cdx"
 }
 
 cdxmake() {
