@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 # Source this file to your bashrc/whatever you use.
 # bk-help for list of functionality.
 # Edit as you wish.
 # Function to add new shortcuts
-function bk() {
+bk() {
     pwd_output=$(pwd)
 
     # Check if a comment was provided
@@ -32,14 +32,14 @@ function bk() {
     # Append the new shortcut and comment properly
     cat >> "$target" << EOF
 #$1 - $comment
-function goto_$1() {
+ goto_$1() {
     cd "$pwd_output"
 }
 EOF
 }
 
 # Function to go to the saved shortcuts
-function goto() {
+goto() {
     if [ -z "$CASE_FILE" ]; then
         target=~/bookmark.sh
     else
@@ -57,7 +57,7 @@ function goto() {
         else
             # Attempt to go to the provided shortcut by calling the function dynamically
             shortcut_function="goto_$1"
-            if type "$shortcut_function" &> /dev/null; then
+            if type "$shortcut_function" > /dev/null 2>&1; then
                 eval "$shortcut_function"
             else
                 echo "Shortcut '$1' not found."
@@ -69,22 +69,22 @@ function goto() {
 }
 
 # Dummy function to avoid empty goto
-function dummy() {
+dummy() {
     cd "/"
 }
 
-function bk-cases() {
+bk-cases() {
     if [ -z "$1" ]
     then
-        ls $HOME/Cases/ | cut -f 1 -d '.'
+        ls "$HOME"/Cases/ | cut -f 1 -d '.'
     fi
 }
 
-function bk-now() {
-    echo $CASE_FILE
+bk-now() {
+    echo "$CASE_FILE"
 }
 
-function bk-list() {
+bk-list() {
     if [ -e "$HOME/Cases/$1.sh" ]
     then
         grep -E "^\s*cd|^\s*#.*" "$HOME/Cases/$1.sh" | sed 's/^\s*cd\s*//; s/^\s*#//'
@@ -93,7 +93,7 @@ function bk-list() {
     fi
 }
 
-function bk-help() {
+bk-help() {
     echo 'Set environmental variable "CASE_FILE" to whatever you wish to save bookmarks to it.'
     echo 'Example: export CASE_FILE="XA-001"'
     echo " "
