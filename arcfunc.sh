@@ -11,14 +11,24 @@
 ERROR='\033[0;31mERROR:\033[0m'
 WARN='\033[1;33mWARN:\033[0m'
 NOTE='\033[0;36mNOTE:\033[0m'
-daDir='/sym/Root/Backups/DeviantArtDB'
-#daDir="/mnt/nas/Backups/DeviantArtDB"
+daDir='SET-ME-TO-DEVIANTARTDB-DIR'
+ytCookies='SET-ME-TO-COOKIES'
 
 arcfunc() {
     printf "arcfunc by banement\n"
     printf "arc | etc | help\n"
 
     if [ "$1" = "arc" ]; then
+
+        if [ "$ytCookies" = "SET-ME-TO-COOKIES" ]; then
+            echo -e "$WARN $ytCookies is unset."
+        fi
+
+        if [ "$daDir" = "SET-ME-TO-DEVIANTARTDB-DIR" ]; then
+            echo -e "$WARN $daDir is unset."
+        fi
+        
+        echo -e "---------------"
         printf "$WARN checkdel - Compares live Twitter metadata to the images we have downloaded, and sorts deleted images.\n"
         printf "cdxback <website> - Makes a CDX from inputted site.\n"
         printf "cdxmake <website> - Generates a list of URLs from a CDX. Use after cdxback.\n" 
@@ -37,7 +47,7 @@ arcfunc() {
     elif [ "$1" = "etc" ]; then
         printf "apk-size - On Alpine, gives a list of all the packages and their sizes.\n"
     elif [ "$1" = "help" ]; then
-        printf "yellow = NAS-specific setup | blue = read the README\n"
+        printf "yellow = Needs extra setup. | blue = read the README.\n"
     fi
 }
 
@@ -97,6 +107,15 @@ unlistedhunter() {
     unCount=0
     dCount=0
 
+    if [ "$ytCookies" = "SET-ME-TO-COOKIES" ]; then
+        echo "$ERROR You need to set \$ytCookies to where your youtube cookies are!"
+        return 1
+    elif [ ! -f "$ytCookies" ]; then
+        echo -e "$ERROR The file you set \$ytCookies to can't be found!"
+        echo "We're looking at: $ytCookies"
+        return 1
+    fi
+
     stats() {
         printf "%s\nunlistedhunter stats"
         echo "C A P T . U D"
@@ -125,9 +144,8 @@ unlistedhunter() {
 
         # Construct the full video URL
         videoUrl="${baseUrl}${videoId}"
-
         # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        output=$(yt-dlp --cookies ~/cookies/yt.txt --simulate --print-json "$videoUrl" 2>&1) # Add --cookies <loc> or --cookies-from-browser
+        output=$(yt-dlp --cookies "$ytCookies" --simulate --print-json "$videoUrl" 2>&1) # Set $ytCookies or use --cookies-from-browser
 
         # Check for specific strings in the output
         if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
@@ -307,7 +325,7 @@ zipback() {
         # download valley (the good one)
         echo "[$time] Downloading: $filename "
         echo "$url" >> ./zipback/temp_urlList.txt
-        echo "$status" >> ./zipback/temp_urlList.txt
+        echo "$status" >> ./zipback/temp_urlList.txtSET-ME
         wget --timeout=10 --tries=2 --waitretry=0 --random-wait --retry-connrefused -q --show-progress --directory-prefix="./zipback" "$url"
         requests=$(expr $requests + 1)
 
@@ -771,6 +789,16 @@ quick-warc() {
 }
 
 videocheck() {
+
+    if [ "$ytCookies" = "SET-ME-TO-COOKIES" ]; then
+        echo "$ERROR You need to set \$ytCookies to where your youtube cookies are!"
+        return 1
+    elif [ ! -f "$ytCookies" ]; then
+        echo -e "$ERROR The file you set \$ytCookies to can't be found!"
+        echo "We're looking at: $ytCookies"
+        return 1
+    fi
+
     # Video list file
     videoList="localIDs.txt"
     if [ "$1" = "old" ]; then
@@ -799,7 +827,7 @@ videocheck() {
         if [ -n "${DEBUG_SCRIPT}" ]; then # Set DEBUG_SCRIPT environmental variable to anything to get full output
             output=$(yt-dlp --simulate "$videoUrl")
         else
-            output=$(yt-dlp --simulate --cookies <cookies> "$videoUrl" 2>&1)
+            output=$(yt-dlp --simulate --cookies "$ytCookies" "$videoUrl" 2>&1)
         fi
 
         # Check for specific strings in the output
