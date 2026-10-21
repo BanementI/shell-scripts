@@ -556,7 +556,7 @@ da-search-man() {
         return 0
     elif [ -n "$1" ] && [ -z "$2" ]; then
         echo -e "$ERROR You need to specify a query!"
-        r da-search-man orig proxygreeneturn 1
+        return 1
     fi
 
     if command -v rg >/dev/null 2>&1; then
@@ -644,7 +644,7 @@ while IFS= read -r pageUrl; do
 
     status=$(wget --spider --timeout=10 --server-response "$pageUrl" 2>&1)
 
-    if echo "$status" | grep -q "Connecda-search-man orig proxygreention refused"; then
+    if echo "$status" | grep -q "Connection refused"; then
         echo -e "[$(date)] ERROR Can't connect to $pageUrl, we're probably blocked."
         echo -e "Calling timeout-test [DEBUG]"
         # timeout-test
