@@ -1,6 +1,6 @@
 #!/bin/sh
 ##################################################################
-# ARCFUNC - PUBLIC - NOT POSIX COMPLIANT
+# ARCFUNC - PUBLIC - MOSTLY NOT POSIX COMPLIANT
 #
 # Scripts to help maintain my archives. Some were mostly AI-assisted, they have been noted.
 #
@@ -11,6 +11,8 @@
 ERROR='\033[0;31mERROR:\033[0m'
 WARN='\033[1;33mWARN:\033[0m'
 NOTE='\033[0;36mNOTE:\033[0m'
+daDir='/sym/Root/Backups/DeviantArtDB'
+#daDir="/mnt/nas/Backups/DeviantArtDB"
 
 arcfunc() {
     printf "arcfunc by banement\n"
@@ -125,7 +127,7 @@ unlistedhunter() {
         videoUrl="${baseUrl}${videoId}"
 
         # Run yt-dlp to simulate fetching video info (without actually downloading it)
-        output=$(yt-dlp --simulate --print-json "$videoUrl" 2>&1) # Add --cookies <loc> or --cookies-from-browser
+        output=$(yt-dlp --cookies ~/cookies/yt.txt --simulate --print-json "$videoUrl" 2>&1) # Add --cookies <loc> or --cookies-from-browser
 
         # Check for specific strings in the output
         if echo "$output" | grep -q "copyright claim"; then # Copyright claimed
@@ -155,8 +157,6 @@ unlistedhunter() {
             fi
         fi
     done < "$videoList"
-
-    stats
 
 }
 
@@ -396,10 +396,32 @@ timeout-test() {
 }
 
 da-search() {
+    if [ ! -d "$daDir" ]; then
+        echo -e "$ERROR You haven't set \$daDir correctly!"
+        echo "Edit arcfunc.sh and set daDir to where you've put the DeviantArtDB files."
+        echo "Currently it is: $daDir"
+        return 1
+    fi
+    
+    if [ -z "$1" ]; then
+        echo "Recursively searches your DeviantArtDB folder for a query and saves the output to a file."
+        echo -e "$NOTE Ripgrep is highly reccomended as we'll be going through MILLIONS of lines."
+        echo "Usage: da-search <query>"
+        return 0
+    fi
+
+    if command -v rg >/dev/null 2>&1; then
+        echo -e "$NOTE Using ripgrep"
+    else
+        echo -e "$ERROR ripgrep not installed! If you value your time, install it."
+        echo "Otherwise, edit the script and change it yourself. I CBA to write some fallback bullshit."
+        return 1
+    fi
+
     search=$1
     #shift
     # "$@"
-    rg "$search" /sym/Root/Backups/DeviantArtDB | while IFS= read -r line; do
+    rg "$search" "$daDir" | while IFS= read -r line; do
     # Extract the quoted strings manually using POSIX tools
     filename=$(echo "$line" | cut -d: -f1)
     timestamp=$(echo "$line" | tr '"' '\n' | awk 'NR==4 {print $1}')
@@ -420,15 +442,40 @@ da-search() {
 
 da-search-man() {
 
-    if [ $1 == "list" ]; then
-      ls /sym/Root/Backups/DeviantArtDB/CDX
-      return 1
+    if [ ! -d "$daDir" ]; then
+        echo -e "$ERROR You haven't set \$daDir correctly!"
+        echo "Edit arcfunc.sh and set daDir to where you've put the DeviantArtDB files."
+        echo "Currently it is: $daDir"
+        return 1
     fi
 
-    search=$2
+    if [ -z "$1" ]; then
+        echo "Manually searches a DeviantArt subdomain and puts the downloadable URLs into a file."
+        echo "Usage: da-search-man [list] <subdomain> <query>"
+        echo "list = List available subdomains."
+        return 0
+    elif [ "$1" = "list" ]; then
+        ls "$daDir/CDX"
+        return 0
+    elif [ -n "$1" ] && [ -z "$2" ]; then
+        echo -e "$ERROR You need to specify a query!"
+        r da-search-man orig proxygreeneturn 1
+    fi
+
+    if command -v rg >/dev/null 2>&1; then
+        echo -e "$NOTE Using ripgrep"
+    else
+        # bro i tried for too long to figure ts out, just use ripgrep, its literally superior to grep in every single way
+        echo -e "$ERROR ripgrep not installed! If you value your time, install it."
+        echo "Otherwise, edit the script and change it yourself. I CBA to write some fallback bullshit."
+        return 1
+    fi
+
+    cdn=$1
+    query=$2
     #shift
     # "$@"
-    rg "$search" /sym/Root/Backups/DeviantArtDB/CDX/$1 | while IFS= read -r line; do
+    rg "$query" $daDir/CDX/$cdn | while IFS= read -r line; do
     # Extract the quoted strings manually using POSIX tools
     filename=$(echo "$line" | cut -d: -f1)
     timestamp=$(echo "$line" | tr '"' '\n' | awk 'NR==4 {print $1}')
@@ -444,7 +491,7 @@ da-search-man() {
     # Use curl to fetch the URL (you can add options like -O to save the file)
     #curl -O "$archive_url"
     done
-    echo "Sent to $search.txt"
+    echo "Sent to $query.txt"
 }
 
 wixmp-search() {
@@ -497,7 +544,7 @@ while IFS= read -r pageUrl; do
 
     status=$(wget --spider --timeout=10 --server-response "$pageUrl" 2>&1)
 
-    if echo "$status" | grep -q "Connection refused"; then
+    if echo "$status" | grep -q "Connecda-search-man orig proxygreention refused"; then
         echo -e "[$(date)] ERROR Can't connect to $pageUrl, we're probably blocked."
         echo -e "Calling timeout-test [DEBUG]"
         # timeout-test
